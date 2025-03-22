@@ -1,3 +1,4 @@
 langchain-openai
 langgraph
 mysql
+mysql-connector

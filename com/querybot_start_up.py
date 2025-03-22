@@ -19,7 +19,7 @@ def backup_log_file(log_filepath):
     if os.path.exists(log_filepath):
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filepath = f"{log_filepath}.{timestamp}"
-        shutil.copy2(log_filepath, backup_filepath)
+        shutil.move(log_filepath, backup_filepath)
         print(f"Log file backed up to: {backup_filepath}")
     else:
         print("No existing log file to backup.")
@@ -52,11 +52,6 @@ def run_query_bot():
 
 def main():
     
-    print(f'dir:{os.path.dirname(__file__)}')
-    config_file_path = os.path.join(os.path.dirname(__file__), "../", "config.properties")
-    print(f'Config file path:{config_file_path}. Exists? {os.path.exists(config_file_path)}')
-    
-    config_reader.load_config(config_file_path)
     run_query_bot()
     
 if __name__ == "__main__":

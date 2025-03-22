@@ -2,19 +2,19 @@
 
 @author: Henry Martin
 '''
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import RemoveMessage
-
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import InMemorySaver
-
-import traceback
 import logging
+import traceback
 
-from com.querybot.agents.db_agents import mysql_organization_db_agent, mysql_college_db_agent
-from com.querybot.agents.querybot_prompts import output_formatter_prompt_template,\
-    rewrite_prompt
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import RemoveMessage
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.prebuilt import create_react_agent
+
+from com.querybot.agents.db_agents import mysql_organization_db_scheme_generation_agent, mysql_college_db_scheme_generation_agent, mysql_organization_db_query_execution_agent, \
+                        mysql_college_db_query_execution_agent
+from com.querybot.agents.querybot_prompts import output_formatter_prompt_template
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def initialize_querybot_service():
     
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
     
-    tools = [mysql_organization_db_agent, mysql_college_db_agent]
+    tools = [mysql_organization_db_scheme_generation_agent, mysql_college_db_scheme_generation_agent, mysql_organization_db_query_execution_agent, mysql_college_db_query_execution_agent]
     
     agent_executor = create_react_agent(llm, tools, state_modifier=output_formatter_prompt_template, checkpointer=memory, debug=True)
 
@@ -40,7 +40,6 @@ def generate_response(query, session_id):
         hist_messages = agent_executor.get_state(config).values["messages"]
         logger.info(f'messages in memory {len(hist_messages)}')
         
-        #if len(hist_messages) > 4:
         msgs_to_delete = []
         for msg in hist_messages:
             if not isinstance(msg, ToolMessage):
@@ -55,17 +54,6 @@ def generate_response(query, session_id):
             if not isinstance(msg, ToolMessage) and msg.content:
                 chat_hist.append({msg.__class__.__name__:msg.content})
                 
-    
-    logger.info(f'Chat history: {chat_hist}')
-    
-    schema_info = ''
-    prompt = f"""
-        You are an SQL expert. Based on the following database schema:
-        {schema_info}
-        Convert the following natural language query into a valid SQL query:
-        '{query}'
-        """
-        
     logger.info(f"Query: {query}, userid: {session_id}")
     
     final_output = 'Unable to retrieve data at this moment, please try again later.'
@@ -86,7 +74,7 @@ def generate_response(query, session_id):
     except:
         logger.error(f"Error occurred while processing request: {traceback.format_exc()}")
 
-    logger.info(f"DB Query to execute is:{final_output}")
+    logger.info(f"AIQueryBot Results:{final_output}")
        
     return final_output
 
