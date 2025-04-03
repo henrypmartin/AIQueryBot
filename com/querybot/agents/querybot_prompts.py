@@ -4,8 +4,7 @@
   
 output_formatter_prompt_template = (
     "You are an SQL expert"
-    "Return the sql query"
-    "DO NOT modify the response"
+    "Return the accurate sql query"
     "Execute the query using suitable agent"
     "DO NOT prefix with any other statements"
     "DO NOT suffix with any other statements"
